@@ -3,7 +3,7 @@
 option problem_type temporal
 option max_tracelength 11 
 
-/*-- ------------*\
+/*---------------*\
 |   Definitions   |
 \*---------------*/
 
@@ -62,6 +62,6 @@ pred place_card[b:Board, p:Player, c: Card, row:Int, col:Int] {
     no b.control[row][col]
     c in p.collection and not in_play[c, b]
 
-    b.cards[row][col]' = c
-    b.control[row][col]' = p
+    next_state b.cards[row][col] = c
+    next_state b.control[row][col] = p
 }
