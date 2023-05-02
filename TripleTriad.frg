@@ -39,7 +39,23 @@ pred init[board: Board] {
 	all row, col: Int | {
         no board.cards[row][col]
         no board.control[row][col]
-    } 
+    }
+    -- each player starts with 5 cards
+    #board.player1.collection = 5
+    #board.player2.collection = 5
+    #Card = 10
+    -- each player starts with different cards
+    all c: Card | {
+        c in board.player1.collection => c not in board.player2.collection
+        c in board.player2.collection => c not in board.player1.collection
+    }
+    -- each card has values between 1 and 10
+    all c: Card | {
+        1 <= c.top and c.top <= 10
+        1 <= c.bottom and c.bottom <= 10
+        1 <= c.left and c.left <= 10
+        1 <= c.right and c.right <= 10
+    }
 }
 
 pred p1_turn[board: Board] {
@@ -74,4 +90,11 @@ pred place_card[b: Board, p: Player, c: Card, row: Int, col: Int] {
     // action
     next_state b.cards[row][col] = c
     next_state b.control[row][col] = p
+}
+
+pred game_end[b: Board] {
+    -- the game ends when the board is full
+    all row, col: Int | { // TODO: need to constrain this to the board size
+        some b.cards[row][col]
+    }
 }
