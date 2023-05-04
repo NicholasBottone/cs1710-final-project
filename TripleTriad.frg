@@ -156,7 +156,7 @@ pred flip[b:Board, attacker: Player, c:Card] {
             }
 
             (b.cards[row2][col2])' = b.cards[row2][col2]    
-        }  
+        }
     }
 }
 
@@ -167,7 +167,18 @@ pred game_end[b: Board] {
     }
 }
 
+pred winning_1[b: Board] {
+    // for any player p they must control more cards on the board
+    #{row, col: Int | b.control[row][col] = b.player1} >
+    #{row, col: Int | b.control[row][col] = b.player2}
 
+}
+
+pred winning_2[b: Board] {
+    // for any player p they must control more cards on the board
+    #{row, col: Int | b.control[row][col] = b.player2} >
+    #{row, col: Int | b.control[row][col] = b.player1}
+}
 one sig Game {
     board: one Board
 }
@@ -196,6 +207,6 @@ test expect {
 	vacuityTest: {init[Game.board]} for exactly 5 Int, 15 Card, 1 Board, 2 Player is sat
 }
 
-//run {
-//    traces
-//} for exactly 5 Int, 15 Card, 1 Board, 2 Player
+run {
+   traces
+} for exactly 5 Int, 15 Card, 1 Board, 2 Player
