@@ -16,7 +16,7 @@ sig Card {
 }
 
 sig Player {
-    var collection: set Card
+    collection: set Card
 }
 
 abstract sig Index {}
@@ -93,21 +93,25 @@ pred p2_turn[board: Board] {
     #board.player1.collection = add[#board.player2.collection, 1]
 }
 
+//TODO: CHANGE FROM Int to Index
 pred top_adjacent[row1: Int, row2: Int, col1: Int, col2: Int] {
     row1 = subtract[row2, 1]
     col1 = col2
 }
 
+//TODO: CHANGE FROM Int to Index
 pred bottom_adjacent[row1: Int, row2: Int, col1: Int, col2: Int] {
     row1 = add[row2, 1]
     col1 = col2
 }
 
+//TODO: CHANGE FROM Int to Index
 pred left_adjacent[row1: Int, row2: Int, col1: Int, col2: Int] {
     row1 = row2
     col1 = subtract[col2, 1]
 }
 
+//TODO: CHANGE FROM Int to Index
 pred right_adjacent[row1: Int, row2: Int, col1: Int, col2: Int] {
     row1 = row2
     col1 = add[col2, 1]
@@ -120,7 +124,7 @@ pred in_play[c: Card, b: Board] {
     }
 }
 
-pred place_card[b: Board, p: Player, c: Card, row: Int, col: Int] {
+pred place_card[b: Board, p: Player, c: Card, row, col: Index] {
     // guard
     -- a player can place a card if it is in their collection and not already on the board
     //p1_turn[b] => p = b.player1
@@ -134,7 +138,8 @@ pred place_card[b: Board, p: Player, c: Card, row: Int, col: Int] {
     next_state b.cards[row][col] = c
     next_state b.control[row][col] = p
 
-    all row2: Int, col2: Int | (row!=row2 or col!=col2) implies { 
+    -- everything else that isn't the new card stays the same into next state
+    all row2, col2: Index | (row!=row2 or col!=col2) implies { 
         b.cards[row2][col2] = (b.cards[row2][col2])'                
         b.control[row2][col2] = (b.control[row2][col2])'     
     }
@@ -163,7 +168,7 @@ pred flip[b:Board, attacker: Player, c:Card] {
 pred game_end[b: Board] {
     -- the game ends when the board is full
     all row, col: Index | {
-        (row >= 0 and row < 3 and col >= 0 and col < 3) => some b.cards[row][col]
+        some b.cards[row][col]
     }
 }
 
@@ -184,7 +189,7 @@ one sig Game {
 }
 
 pred progressing {
-    some row: Int, col: Int, c: Card, p: Player | {
+    some row, col: Index, c: Card, p: Player | {
         p = Game.board.player1 or p = Game.board.player2
         place_card[Game.board, p, c, row, col]
     }
@@ -192,10 +197,14 @@ pred progressing {
 
 pred traces {
     init[Game.board]
-    wellformed[Game.board]
+    always {wellformed[Game.board]
     valid_cards
-    //eligible_players
-    //always progressing until game_end[Game.board]
+    eligible_players}
+    progressing
+    //eventually game_end[Game.board] 
+    //always eventually game_end[Game.board]
+    progressing until game_end[Game.board]
+    //progressing and next_state {progressing} and next_state{next_state{progressing}}
     //    some attacker: Player, c: Card, row: Int, col: Int | { place_card[Game.board, attacker, c, row, col]}
         //either this or the board is busy flipping  
     //} until {game_end[Game.board]}
