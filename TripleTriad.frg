@@ -19,13 +19,18 @@ sig Player {
     var collection: set Card
 }
 
+abstract sig Index {}
+one sig A extends Index {}
+one sig B extends Index {}
+one sig C extends Index {}
+
 sig Board {
-    var cards: pfunc Int -> Int -> Card,
-    var control: pfunc Int -> Int -> Player,
+    var cards: pfunc Index -> Index -> Card,
+    var control: pfunc Index -> Index -> Player,
     player1: one Player,
     player2: one Player,
     var scores: pfunc Player -> Int
-    //LATER elements: pfunc Int -> Int -> Element
+    //LATER elements: pfunc Index -> Index -> Element
     
 }
 
@@ -37,11 +42,8 @@ sig Board {
 \*-------------------*/
 
 pred wellformed[b: Board] {
-    all row, col: Int | {
+    all row, col: Index | {
         some b.cards[row][col] <=> some b.control[row][col]
-
-        (row < 0 or row > 2 or col < 0 or col > 2) implies
-            no b.cards[row][col] and no b.control[row][col]
     }
 }
 
@@ -66,7 +68,7 @@ pred eligible_players {
 
 pred init[board: Board] {
     -- the board starts empty
-	all row, col: Int | {
+	all row, col: Index | {
         no board.cards[row][col]
         no board.control[row][col]
     }
@@ -113,7 +115,7 @@ pred right_adjacent[row1: Int, row2: Int, col1: Int, col2: Int] {
 
 pred in_play[c: Card, b: Board] {
     -- a card is in play if it is on the board
-    some row, col: Int | {
+    some row, col: Index | {
         b.cards[row][col] = c
     }
 }
@@ -139,7 +141,7 @@ pred place_card[b: Board, p: Player, c: Card, row: Int, col: Int] {
 }
 
 pred flip[b:Board, attacker: Player, c:Card] {
-    one row, col: Int | {
+    one row, col: Index | {
         prev_state place_card[b, attacker, c, row, col]
 
         all row2, col2: Int | {
@@ -160,21 +162,21 @@ pred flip[b:Board, attacker: Player, c:Card] {
 
 pred game_end[b: Board] {
     -- the game ends when the board is full
-    all row, col: Int | {
+    all row, col: Index | {
         (row >= 0 and row < 3 and col >= 0 and col < 3) => some b.cards[row][col]
     }
 }
 
 pred winning_1[b: Board] {
     // for any player p they must control more cards on the board
-    #{row, col: Int | b.control[row][col] = b.player1} >
-    #{row, col: Int | b.control[row][col] = b.player2}
+    #{row, col: Index | b.control[row][col] = b.player1} >
+    #{row, col: Index | b.control[row][col] = b.player2}
 }
 
 pred winning_2[b: Board] {
     // for any player p they must control more cards on the board
-    #{row, col: Int | b.control[row][col] = b.player2} >
-    #{row, col: Int | b.control[row][col] = b.player1}
+    #{row, col: Index | b.control[row][col] = b.player2} >
+    #{row, col: Index | b.control[row][col] = b.player1}
 }
 
 one sig Game {
