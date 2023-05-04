@@ -82,15 +82,13 @@ pred init[board: Board] {
 }
 
 pred p1_turn[board: Board] {
-    -- player 1 goes when both players have placed the same number of cards
-    #{row, col: Int | board.control[row][col] = board.player1} = 
-      #{row, col: Int | board.control[row][col] = board.player2}
+    -- player 1 goes when both players have the same number of cards in their hand
+    #board.player1.collection = #board.player2.collection
 }
 
 pred p2_turn[board: Board] {
-    -- player 2 goes when player 1 has placed one more card than player 2
-    #{row, col: Int | board.control[row][col] = board.player1} = 
-      add[#{row, col: Int | board.control[row][col] = board.player2}, 1]
+    -- player 2 goes when player 1 has one more card in their hand
+    #board.player1.collection = add[#board.player2.collection, 1]
 }
 
 pred top_adjacent[row1: Int, row2: Int, col1: Int, col2: Int] {
@@ -171,7 +169,6 @@ pred winning_1[b: Board] {
     // for any player p they must control more cards on the board
     #{row, col: Int | b.control[row][col] = b.player1} >
     #{row, col: Int | b.control[row][col] = b.player2}
-
 }
 
 pred winning_2[b: Board] {
@@ -179,6 +176,7 @@ pred winning_2[b: Board] {
     #{row, col: Int | b.control[row][col] = b.player2} >
     #{row, col: Int | b.control[row][col] = b.player1}
 }
+
 one sig Game {
     board: one Board
 }
@@ -187,11 +185,12 @@ pred progressing {
     some row: Int, col: Int, c: Card, p: Player | {
         p = Game.board.player1 or p = Game.board.player2
         place_card[Game.board, p, c, row, col]
-}
+    }
 }
 
 pred traces {
-    init[Game.board] and wellformed[Game.board]
+    init[Game.board]
+    wellformed[Game.board]
     valid_cards
     //eligible_players
     //always progressing until game_end[Game.board]
