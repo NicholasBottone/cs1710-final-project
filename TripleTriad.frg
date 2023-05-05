@@ -48,6 +48,8 @@ pred wellformed[b: Board] {
 	all row, col: Index | {
     	some b.cards[row][col] <=> some b.control[row][col]
 	}
+	-- a card cannot be in multiple spaces simultaneously
+  some c: Card | in_play[c, b] => {one x, y: Index | b.cards[y][x] = c}
 }
 
 pred valid_cards {
@@ -91,8 +93,6 @@ pred init[board: Board] {
         -- each player starts with different cards
     	c in board.player1.collection => c not in board.player2.collection
     	c in board.player2.collection => c not in board.player1.collection
-        -- a card cannot be in multiple spaces simultaneously
-        in_play[c, board] => {one x, y: Index | board.cards[y][x] = c}
 	}
 }
 
@@ -117,6 +117,7 @@ pred p2_turn[game: Game] {
 	not p1_turn[game]
 }
 
+//for location 1 in relation to location 2
 pred top_adjacent[row1, col1, row2, col2: Index] {
 	asInt[row1] = subtract[asInt[row2], 1]
 	col1 = col2
@@ -137,11 +138,13 @@ pred right_adjacent[row1, col1, row2, col2: Index] {
 	asInt[col1] = add[asInt[col2], 1]
 }
 
+//constrains the NEXT state to have the given card placed in the given location
 pred place_card[b: Board, p: Player, c: Card, row, col: Index] {
 	// guard
 	-- a player can place a card if it is in their collection and not already on the board
-	c in p.collection
-	not in_play[c, b]
+	//p1_turn[b] => p = b.player1
+	//p2_turn[b] => p = b.player2
+	c in p.collection and not in_play[c, b]
 	-- nothing is already in the spot
 	no b.cards[row][col]
 	no b.control[row][col]
@@ -152,13 +155,17 @@ pred place_card[b: Board, p: Player, c: Card, row, col: Index] {
 
 	-- everything else that isn't the new card stays the same into next state
 	all row2, col2: Index | (row!=row2 or col!=col2) implies {
-    	b.cards[row2][col2] = (b.cards[row2][col2])'           	 
-    	b.control[row2][col2] = (b.control[row2][col2])'	 
-	}
+    	(b.cards[row2][col2])' = b.cards[row2][col2]
+		//(b.control[row2][col2])' = b.control[row2][col2] 
+		-- unless there was a card which was flipped           	 
+    	b.control[row2][col2] != (b.control[row2][col2])' implies {
+			flips[b, p, row, col, row2, col2, c] 
+		} else (b.control[row2][col2])' = b.control[row2][col2] 
+	}	 
 }
 
 
-pred flip[b:Board, attacker: Player, c:Card] {
+/*pred flip[b:Board, attacker: Player, c:Card] {
 	one row, col: Index | {
     	prev_state place_card[b, attacker, c, row, col]
         (b.control[row][col])' = b.control[row][col]
@@ -176,6 +183,17 @@ pred flip[b:Board, attacker: Player, c:Card] {
     	}
 	}
 }
+}*/
+
+pred flips[b:Board, attacker:Player, row1, col1, row2, col2: Index, attack_c: Card] {
+	let defend_c = b.cards[row2][col2] | {
+		some defend_c
+
+		((left_adjacent[row1, col1, row2, col2] and (attack_c.right > defend_c.left)) or 
+    	(right_adjacent[row1, col1, row2, col2] and (attack_c.left > defend_c.right)) or 
+    	(top_adjacent[row1, col1, row2, col2] and (attack_c.bottom > defend_c.top)) or 
+    	(bottom_adjacent[row1, col1, row2, col2] and (attack_c.top > defend_c.bottom))) implies (b.control[row2][col2])' = attacker 
+	}
 }
 
 pred game_end[b: Board] {
@@ -216,7 +234,7 @@ pred progressing {
 pred flipping {
 	some c: Card, p: Player | {
     	p = Game.board.player1 or p = Game.board.player2
-    	flip[Game.board, p, c]
+    	//flip[Game.board, p, c]
 	}
 }
 
