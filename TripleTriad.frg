@@ -28,14 +28,14 @@ sig Board {
 	var cards: pfunc Index -> Index -> Card,
 	var control: pfunc Index -> Index -> Player,
 	player1: one Player,
-	player2: one Player,
-	var scores: pfunc Player -> Int
+	player2: one Player
+	// var scores: pfunc Player -> Int
 	//LATER elements: pfunc Index -> Index -> Element
     
 }
 
 fun asInt[idx: Index]: one Int {
-	idx = A => 0 else idx = B => 1 else 2
+	idx = A => 0 else idx = B => 1 else idx = C => 2 else -10
 }
 
 // abstract sig Element {}
@@ -94,6 +94,8 @@ pred init[board: Board] {
     	c in board.player1.collection => c not in board.player2.collection
     	c in board.player2.collection => c not in board.player1.collection
 	}
+
+	board.player1 != board.player2
 }
 
 pred p1_turn[game: Game] {
@@ -150,17 +152,24 @@ pred place_card[b: Board, p: Player, c: Card, row, col: Index] {
 	no b.control[row][col]
 
 	// action
-	next_state b.cards[row][col] = c
-	next_state b.control[row][col] = p
+	(b.cards[row][col])' = c
+	(b.control[row][col])' = p
 
 	-- everything else that isn't the new card stays the same into next state
 	all row2, col2: Index | (row!=row2 or col!=col2) implies {
-    	(b.cards[row2][col2])' = b.cards[row2][col2]
-		//(b.control[row2][col2])' = b.control[row2][col2] 
-		-- unless there was a card which was flipped           	 
-    	b.control[row2][col2] != (b.control[row2][col2])' implies {
-			flips[b, p, row, col, row2, col2, c] 
-		} else (b.control[row2][col2])' = b.control[row2][col2] 
+		let c2 = b.cards[row2][col2], next_c2 = (b.cards[row2][col2])', control_c2 = b.control[row2][col2], next_control_c2 = (b.control[row2][col2])' | {
+			-- the card itself should not change
+			next_c2 = c2
+
+			some c2 implies {
+				-- if there was a flip, control changes. otherwise, it stays the same
+				((left_adjacent[row, col, row2, col2] and (c.right > c2.left)) or 
+					(right_adjacent[row, col, row2, col2] and (c.left > c2.right)) or
+					(top_adjacent[row, col, row2, col2] and (c.bottom > c2.top)) or
+					(bottom_adjacent[row, col, row2, col2] and (c.top > c2.bottom))) implies
+					next_control_c2 = p else next_control_c2 = control_c2
+			}
+		}
 	}	 
 }
 
@@ -188,11 +197,12 @@ pred place_card[b: Board, p: Player, c: Card, row, col: Index] {
 pred flips[b:Board, attacker:Player, row1, col1, row2, col2: Index, attack_c: Card] {
 	let defend_c = b.cards[row2][col2] | {
 		some defend_c
-
+		b.control[row2][col2] != attacker
 		((left_adjacent[row1, col1, row2, col2] and (attack_c.right > defend_c.left)) or 
-    	(right_adjacent[row1, col1, row2, col2] and (attack_c.left > defend_c.right)) or 
-    	(top_adjacent[row1, col1, row2, col2] and (attack_c.bottom > defend_c.top)) or 
-    	(bottom_adjacent[row1, col1, row2, col2] and (attack_c.top > defend_c.bottom))) implies (b.control[row2][col2])' = attacker 
+			(right_adjacent[row1, col1, row2, col2] and (attack_c.left > defend_c.right)) or 
+			(top_adjacent[row1, col1, row2, col2] and (attack_c.bottom > defend_c.top)) or 
+    	(bottom_adjacent[row1, col1, row2, col2] and (attack_c.top > defend_c.bottom))) implies
+			(next_state b.control[row2][col2]) = attacker 
 	}
 }
 
