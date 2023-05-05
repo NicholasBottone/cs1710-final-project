@@ -26,9 +26,9 @@ container.style["font-weight"] = "bold";
  * Adds a card to the board div.
  * @param {Card} cardAtom the card atom to print
  * @param {string} controllingPlayer the player who controls the card
- * @param {boolean} isHighlighted whether the card is highlighted
+ * @param {string | undefined} highlightColor the color to highlight the card
  */
-function printCard(cardAtom, controllingPlayer, isHighlighted) {
+function printCard(cardAtom, controllingPlayer, highlightColor) {
   // print each value of the card (inner pad to two characters)
   const card = document.createElement("td");
 
@@ -90,7 +90,7 @@ function printCard(cardAtom, controllingPlayer, isHighlighted) {
   card.style["text-align"] = "center";
   card.style["vertical-align"] = "middle";
   card.style["border"] = "1px solid black";
-  if (isHighlighted) card.style["border"] = "3px solid red";
+  if (highlightColor) card.style["border"] = "3px solid " + highlightColor;
 
   cardTable.style["width"] = "100%";
 
@@ -126,16 +126,24 @@ function printBoard(boardAtom, turn, lastBoard) {
   for (let r = 1; r <= 3; r++) {
     const row = document.createElement("tr");
     for (let c = 1; c <= 3; c++) {
+      let highlightColor = undefined;
+      if (lastBoard) {
+        // highlight green if the card is newly placed
+        if (boardAtom.cards[findAtom(r)][findAtom(c)].toString() !==
+              lastBoard.cards[findAtom(r)][findAtom(c)].toString())
+          highlightColor = "green";
+        else if (
+          boardAtom.control[findAtom(r)][findAtom(c)].toString() !==
+          lastBoard.control[findAtom(r)][findAtom(c)].toString()
+        )
+          // highlight yellow if the control is newly flipped
+          highlightColor = "yellow";
+      }
       row.appendChild(
         printCard(
           boardAtom.cards[findAtom(r)][findAtom(c)],
           boardAtom.control[findAtom(r)][findAtom(c)].toString().slice(-1),
-          // highlight the card if it is different from the previous board
-          lastBoard &&
-            (boardAtom.cards[findAtom(r)][findAtom(c)].toString() !==
-              lastBoard.cards[findAtom(r)][findAtom(c)].toString() ||
-              boardAtom.control[findAtom(r)][findAtom(c)].toString() !==
-                lastBoard.control[findAtom(r)][findAtom(c)].toString())
+          highlightColor
         )
       );
     }
