@@ -1,22 +1,3 @@
-require("d3");
-d3.selectAll("svg > *").remove();
-
-const BOARD_MARGIN_X = 5;
-const BOARD_MARGIN_Y = 2;
-
-const CELL_MARGIN_X = 5;
-const CELL_MARGIN_Y = 5;
-
-const DIGIT_HEIGHT = 16;
-const DIGIT_WIDTH = 10;
-
-const CELL_HEIGHT = DIGIT_HEIGHT * 3;
-const CELL_WIDTH = DIGIT_WIDTH * 3;
-
-const BOARD_HEIGHT = CELL_HEIGHT * 3 + CELL_MARGIN_Y * 5;
-const BOARD_WIDTH = CELL_WIDTH * 3 + CELL_MARGIN_X * 5;
-const BOARD_PADDING = 10;
-
 // interface Card {
 //   top: number;
 //   bottom: number;
@@ -33,61 +14,76 @@ const BOARD_PADDING = 10;
 //   collection: Card[];
 // }
 
-/**
- * Prints a text value to the svg
- * @param {number} x the x coordinate to print at
- * @param {number} y the y coordinate to print at
- * @param {string} value the value to print
- * @param {number} yoffset the y offset of the board
- * @param {number} row the row index of the card
- * @param {number} col the column index of the card
- */
-function printValue(x, y, value, yoffset, row, col) {
-  console.log(`Printing ${value} at (${x}, ${y})`);
-  d3.select(svg)
-    .append("text")
-    .style("fill", "black")
-    .attr(
-      "x",
-      (col - 1) * CELL_WIDTH + (x - 1) * DIGIT_WIDTH + CELL_MARGIN_X * x
-    )
-    .attr(
-      "y",
-      (row - 1) * CELL_HEIGHT +
-        (y - 1) * DIGIT_HEIGHT +
-        yoffset +
-        CELL_MARGIN_Y * (y + 1)
-    )
-    .text(value);
-}
+div.replaceChildren();
+
+const container = document.createElement("div");
+div.style["overflow-y"] = "scroll";
+container.style["overflow-y"] = "scroll";
+container.style["font-family"] = "monospace";
+container.style["font-weight"] = "bold";
 
 /**
- * Prints a Card (3x3 values) to the svg
+ * Adds a card to the board div.
  * @param {Card} cardAtom the card atom to print
- * @param {number} yoffset the y offset of the board
- * @param {number} row the row index of the card
- * @param {number} col the column index of the card
+ * @param {string} controllingPlayer the player who controls the card
  */
-function printCard(cardAtom, yoffset, row, col) {
-  // print each value of the card
-  printValue(2, 1, cardAtom.top.toString(), yoffset, row, col);
-  printValue(2, 3, cardAtom.bottom.toString(), yoffset, row, col);
-  printValue(1, 2, cardAtom.left.toString(), yoffset, row, col);
-  printValue(3, 2, cardAtom.right.toString(), yoffset, row, col);
+function printCard(cardAtom, controllingPlayer) {
+  // print each value of the card (inner pad to two characters)
+  const card = document.createElement("td");
 
-  // draw the card outline
-  d3.select(svg)
-    .append("rect")
-    .attr("x", (col - 1) * (CELL_WIDTH + CELL_MARGIN_X) + CELL_MARGIN_X * 2)
-    .attr(
-      "y",
-      (row - 1) * (CELL_HEIGHT + CELL_MARGIN_Y) + yoffset + CELL_MARGIN_Y
-    )
-    .attr("width", CELL_WIDTH)
-    .attr("height", CELL_HEIGHT)
-    .attr("stroke-width", 2)
-    .attr("stroke", "black")
-    .attr("fill", "transparent");
+  // player 0 is red, player 1 is blue, nobody is white
+  card.style["background-color"] =
+    controllingPlayer === "0"
+      ? "pink"
+      : controllingPlayer === "1"
+      ? "aqua"
+      : "white";
+
+  const cardTable = document.createElement("table");
+  const cardRow1 = document.createElement("tr");
+  const cardRow2 = document.createElement("tr");
+  const cardRow3 = document.createElement("tr");
+
+  const top = document.createElement("td");
+  const bottom = document.createElement("td");
+  const left = document.createElement("td");
+  const right = document.createElement("td");
+
+  top.innerText = cardAtom.top.toString();
+  bottom.innerText = cardAtom.bottom.toString();
+  left.innerText = cardAtom.left.toString().padEnd(4, " ");
+  right.innerText = cardAtom.right.toString().padStart(4, " ");
+
+  cardRow1.appendChild(document.createElement("td"));
+  cardRow1.appendChild(top);
+  cardRow1.appendChild(document.createElement("td"));
+
+  cardRow2.appendChild(left);
+  cardRow2.appendChild(document.createElement("td"));
+  cardRow2.appendChild(right);
+
+  cardRow3.appendChild(document.createElement("td"));
+  cardRow3.appendChild(bottom);
+  cardRow3.appendChild(document.createElement("td"));
+
+  cardRow1.style["text-align"] = "center";
+  cardRow2.style["text-align"] = "center";
+  cardRow3.style["text-align"] = "center";
+
+  cardTable.appendChild(cardRow1);
+  cardTable.appendChild(cardRow2);
+  cardTable.appendChild(cardRow3);
+
+  card.appendChild(cardTable);
+
+  // adjust card style so that every td is the same size
+  card.style["width"] = "65px";
+  card.style["height"] = "65px";
+  card.style["text-align"] = "center";
+  card.style["vertical-align"] = "middle";
+  card.style["border"] = "1px solid black";
+
+  return card;
 }
 
 /**
@@ -107,51 +103,36 @@ function findAtom(v) {
 }
 
 /**
- * Prints a board (3x3 Cards) to the svg
+ * Adds a board to the container div.
  * @param {Board} boardAtom the board atom to print
  * @param {number} yoffset the y offset of the board
  */
 function printBoard(boardAtom, yoffset) {
+  const board = document.createElement("table");
+  board.style["margin"] = "5px";
+
   for (let r = 1; r <= 3; r++) {
+    const row = document.createElement("tr");
     for (let c = 1; c <= 3; c++) {
-      printCard(
-        boardAtom.cards[findAtom(r)][findAtom(c)],
-        yoffset + BOARD_MARGIN_Y,
-        r,
-        c,
-        boardAtom.control[findAtom(r)][findAtom(c)].toString().slice(-1)
+      row.appendChild(
+        printCard(
+          boardAtom.cards[findAtom(r)][findAtom(c)],
+          boardAtom.control[findAtom(r)][findAtom(c)].toString().slice(-1)
+        )
       );
     }
+    board.appendChild(row);
   }
 
-  // draw the board outline
-  d3.select(svg)
-    .append("rect")
-    .attr("x", BOARD_MARGIN_X)
-    .attr("y", yoffset + BOARD_MARGIN_Y)
-    .attr("width", BOARD_WIDTH)
-    .attr("height", BOARD_HEIGHT)
-    .attr("stroke-width", 2)
-    .attr("stroke", "black")
-    .attr("fill", "transparent");
+  return board;
 }
 
-let offset = 0;
+let turn = 1;
 for (const instance of instances) {
   const game = instance?.signature("Game");
   const board = game?.board;
-  if (board) printBoard(board, offset);
-  offset += BOARD_HEIGHT + BOARD_PADDING;
+  if (board) container.appendChild(printBoard(board, turn));
+  turn++;
 }
 
-d3.select(svg)
-  .append("text")
-  .style("fill", "black")
-  .attr("x", 200)
-  .attr("y", 200)
-  .text("Hello world!");
-
-// Adjust the height of the page to fit the svg to allow for scrolling (not working rip)
-const svgHeight = offset + BOARD_HEIGHT + BOARD_PADDING;
-d3.select(svg).attr("height", svgHeight);
-document.body.style.height = `${svgHeight}px`;
+div.appendChild(container);
