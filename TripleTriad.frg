@@ -47,9 +47,10 @@ fun asInt[idx: Index]: one Int {
 pred wellformed[b: Board] {
 	all row, col: Index | {
     	some b.cards[row][col] <=> some b.control[row][col]
+        -- a card cannot be in multiple spaces simultaneously
+    	some c: Card | in_play[c, b] => {one x, y: Index | b.cards[y][x] = c}
 	}
-	-- a card cannot be in multiple spaces simultaneously
-  some c: Card | in_play[c, b] => {one x, y: Index | b.cards[y][x] = c}
+	b.player1 != b.player2
 }
 
 pred valid_cards {
@@ -74,7 +75,7 @@ pred in_play[c: Card, b: Board] {
 pred eligible_players {
 	all p: Player | {
     	-- can't play a game if you don't have enough cards!
-    	#p.collection > 4
+    	#{c: Card | c in p.collection} > 4
 	}
 }
 
@@ -96,25 +97,14 @@ pred init[board: Board] {
 	}
 }
 
-pred p1_turn[game: Game] {
-	-- if player 1 goes first, player 1 goes when both players have placed the same number of cards
-	game.firstTurn = game.board.player1 =>
-		(#{c: Card | (in_play[c, game.board] and c in game.board.player1.collection)} = 
-		#{c: Card | (in_play[c, game.board] and c in game.board.player2.collection)}) else 
-	-- otherwise, player 1 goes when player 2 has placed one more card than player 1
-		(#{c: Card | (in_play[c, game.board] and c in game.board.player1.collection)} = 
-		add[#{c: Card | (in_play[c, game.board] and c in game.board.player2.collection)}, 1])
+pred p1_turn[board: Board] {
+	-- player 1 goes when both players have the same number of cards in their hand
+	#board.player1.collection = #board.player2.collection
 }
 
-pred p2_turn[game: Game] {
-	// -- if player 2 goes first, player 2 goes when both players have placed the same number of cards
-	// game.firstTurn = game.board.player2 =>
-	// 	(#{c: Card | (in_play[c, game.board] and c in game.board.player1.collection)} = 
-	// 	#{c: Card | (in_play[c, game.board] and c in game.board.player2.collection)}) else 
-	// -- otherwise, player 2 goes when player 1 has placed one more card than player 2
-	// 	(#{c: Card | (in_play[c, game.board] and c in game.board.player2.collection)} = 
-	// 	add[#{c: Card | (in_play[c, game.board] and c in game.board.player1.collection)}, 1])
-	not p1_turn[game]
+pred p2_turn[board: Board] {
+	-- player 2 goes when player 1 has one more card in their hand
+	#board.player1.collection = add[#board.player2.collection, 1]
 }
 
 //for location 1 in relation to location 2
@@ -156,11 +146,11 @@ pred place_card[b: Board, p: Player, c: Card, row, col: Index] {
 	-- everything else that isn't the new card stays the same into next state
 	all row2, col2: Index | (row!=row2 or col!=col2) implies {
     	(b.cards[row2][col2])' = b.cards[row2][col2]
-		//(b.control[row2][col2])' = b.control[row2][col2] 
+		(b.control[row2][col2])' = b.control[row2][col2] 
 		-- unless there was a card which was flipped           	 
-    	b.control[row2][col2] != (b.control[row2][col2])' implies {
-			flips[b, p, row, col, row2, col2, c] 
-		} else (b.control[row2][col2])' = b.control[row2][col2] 
+    	//b.control[row2][col2] != (b.control[row2][col2])' implies {
+		//	some b.cards[row2][col2] and flips[b, p, row, col, row2, col2, c] 
+		//} else (b.control[row2][col2])' = b.control[row2][col2] 
 	}	 
 }
 
@@ -188,11 +178,11 @@ pred place_card[b: Board, p: Player, c: Card, row, col: Index] {
 pred flips[b:Board, attacker:Player, row1, col1, row2, col2: Index, attack_c: Card] {
 	let defend_c = b.cards[row2][col2] | {
 		some defend_c
-
-		((left_adjacent[row1, col1, row2, col2] and (attack_c.right > defend_c.left)) or 
-    	(right_adjacent[row1, col1, row2, col2] and (attack_c.left > defend_c.right)) or 
-    	(top_adjacent[row1, col1, row2, col2] and (attack_c.bottom > defend_c.top)) or 
-    	(bottom_adjacent[row1, col1, row2, col2] and (attack_c.top > defend_c.bottom))) implies (b.control[row2][col2])' = attacker 
+		//b.control[row2][col2] != attacker
+		//((left_adjacent[row1, col1, row2, col2] and (attack_c.right > defend_c.left)) or 
+    	//(right_adjacent[row1, col1, row2, col2] and (attack_c.left > defend_c.right)) or 
+    	//(top_adjacent[row1, col1, row2, col2] and (attack_c.bottom > defend_c.top)) or 
+    	((bottom_adjacent[row1, col1, row2, col2] and (attack_c.top > defend_c.bottom))) implies (b.control[row2][col2])' = attacker 
 	}
 }
 
@@ -216,16 +206,12 @@ pred winning_2[b: Board] {
 }
 
 one sig Game {
-	board: one Board,
-	firstTurn: one Player
+	board: one Board
 }
 
 pred progressing {
 	some row, col: Index, c: Card, p: Player | {
-    	-- it is this player's turn
-			p = Game.board.player1 => p1_turn[Game]
-			p = Game.board.player2 => p2_turn[Game]
-			-- the player places a card
+    	p = Game.board.player1 or p = Game.board.player2
     	place_card[Game.board, p, c, row, col]
 	}
 }
@@ -238,13 +224,20 @@ pred flipping {
 	}
 }
 
+pred test_board[b: Board] {
+	all x, y: Index | {
+		y = B and x = B => some b.cards[y][x] else
+		y = C and x = B => some b.cards[y][x] else
+		no b.cards[y][x]
+	}
+}
+
+
 pred traces {
 	init[Game.board]
-	always {
-		wellformed[Game.board]
-		valid_cards
-		eligible_players
-	}
+	always {wellformed[Game.board]
+	valid_cards
+	eligible_players}
 	//progressing and next_state flipping
 	//flipping
 	//eventually game_end[Game.board]
@@ -260,14 +253,24 @@ pred traces {
 	//}
 }
 
-// test expect {
-// 	//vacuity should be for traces
-//     vacuityTest: {init[Game.board]} for exactly 5 Int, 15 Card, 1 Board, 2 Player is sat
-// 	//vacuityTest: {traces} for exactly 5 Int, 15 Card, 1 Board, 2 Player is sat
-// }
+pred setup {
+	always {
+		wellformed[Game.board]
+		valid_cards
+		eligible_players
+		test_board[Game.board]
+	}
+}
+
+test expect {
+	//vacuity should be for traces
+    vacuityTest: {init[Game.board]} for exactly 5 Int, 15 Card, 1 Board, 2 Player is sat
+	//vacuityTest: {traces} for exactly 5 Int, 15 Card, 1 Board, 2 Player is sat
+}
 
 run {
-   traces
+   //traces
+   setup
 } for exactly 5 Int, 15 Card, 1 Board, 2 Player
 
 
