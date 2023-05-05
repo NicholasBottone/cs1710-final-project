@@ -98,22 +98,22 @@ pred init[board: Board] {
 
 pred p1_turn[game: Game] {
 	-- if player 1 goes first, player 1 goes when both players have placed the same number of cards
-	game.firstTurn = game.player1 =>
-		(#{c: Card | in_play[c, game.board] and c in game.player1.collection} = 
-		#{c: Card | in_play[c, game.board] and c in game.player2.collection}) else 
+	game.firstTurn = game.board.player1 =>
+		(#{c: Card | in_play[c, game.board] and c in game.board.player1.collection} = 
+		#{c: Card | in_play[c, game.board] and c in game.board.player2.collection}) else 
 	-- otherwise, player 1 goes when player 2 has placed one more card than player 1
-		(#{c: Card | in_play[c, game.board] and c in game.player1.collection} = 
-		add[#{c: Card | in_play[c, game.board] and c in game.player2.collection}, 1])
+		(#{c: Card | in_play[c, game.board] and c in game.board.player1.collection} = 
+		add[#{c: Card | in_play[c, game.board] and c in game.board.player2.collection}, 1])
 }
 
 pred p2_turn[game: Game] {
 	-- if player 2 goes first, player 2 goes when both players have placed the same number of cards
-	game.firstTurn = game.player2 =>
-		(#{c: Card | in_play[c, game.board] and c in game.player1.collection} = 
-		#{c: Card | in_play[c, game.board] and c in game.player2.collection}) else 
+	game.firstTurn = game.board.player2 =>
+		(#{c: Card | in_play[c, game.board] and c in game.board.player1.collection} = 
+		#{c: Card | in_play[c, game.board] and c in game.board.player2.collection}) else 
 	-- otherwise, player 2 goes when player 1 has placed one more card than player 2
-		(#{c: Card | in_play[c, game.board] and c in game.player2.collection} = 
-		add[#{c: Card | in_play[c, game.board] and c in game.player1.collection}, 1])
+		(#{c: Card | in_play[c, game.board] and c in game.board.player2.collection} = 
+		add[#{c: Card | in_play[c, game.board] and c in game.board.player1.collection}, 1])
 }
 
 pred top_adjacent[row1, col1, row2, col2: Index] {
@@ -145,7 +145,7 @@ pred place_card[b: Board, p: Player, c: Card, row, col: Index] {
 	no b.cards[row][col]
 	no b.control[row][col]
 	-- it is this player's turn
-	p = b.player1 => p1_turn[b.game] else p2_turn[b.game]
+	p = b.player1 => p1_turn[Game] else p2_turn[Game]
 
 	// action
 	next_state b.cards[row][col] = c
