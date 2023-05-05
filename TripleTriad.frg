@@ -72,7 +72,7 @@ pred in_play[c: Card, b: Board] {
 pred eligible_players {
 	all p: Player | {
     	-- can't play a game if you don't have enough cards!
-    	#{c: Card | c in p.collection} > 4
+    	#p.collection > 4
 	}
 }
 
@@ -99,21 +99,22 @@ pred init[board: Board] {
 pred p1_turn[game: Game] {
 	-- if player 1 goes first, player 1 goes when both players have placed the same number of cards
 	game.firstTurn = game.board.player1 =>
-		(#{c: Card | in_play[c, game.board] and c in game.board.player1.collection} = 
-		#{c: Card | in_play[c, game.board] and c in game.board.player2.collection}) else 
+		(#{c: Card | (in_play[c, game.board] and c in game.board.player1.collection)} = 
+		#{c: Card | (in_play[c, game.board] and c in game.board.player2.collection)}) else 
 	-- otherwise, player 1 goes when player 2 has placed one more card than player 1
-		(#{c: Card | in_play[c, game.board] and c in game.board.player1.collection} = 
-		add[#{c: Card | in_play[c, game.board] and c in game.board.player2.collection}, 1])
+		(#{c: Card | (in_play[c, game.board] and c in game.board.player1.collection)} = 
+		add[#{c: Card | (in_play[c, game.board] and c in game.board.player2.collection)}, 1])
 }
 
 pred p2_turn[game: Game] {
-	-- if player 2 goes first, player 2 goes when both players have placed the same number of cards
-	game.firstTurn = game.board.player2 =>
-		(#{c: Card | in_play[c, game.board] and c in game.board.player1.collection} = 
-		#{c: Card | in_play[c, game.board] and c in game.board.player2.collection}) else 
-	-- otherwise, player 2 goes when player 1 has placed one more card than player 2
-		(#{c: Card | in_play[c, game.board] and c in game.board.player2.collection} = 
-		add[#{c: Card | in_play[c, game.board] and c in game.board.player1.collection}, 1])
+	// -- if player 2 goes first, player 2 goes when both players have placed the same number of cards
+	// game.firstTurn = game.board.player2 =>
+	// 	(#{c: Card | (in_play[c, game.board] and c in game.board.player1.collection)} = 
+	// 	#{c: Card | (in_play[c, game.board] and c in game.board.player2.collection)}) else 
+	// -- otherwise, player 2 goes when player 1 has placed one more card than player 2
+	// 	(#{c: Card | (in_play[c, game.board] and c in game.board.player2.collection)} = 
+	// 	add[#{c: Card | (in_play[c, game.board] and c in game.board.player1.collection)}, 1])
+	not p1_turn[game]
 }
 
 pred top_adjacent[row1, col1, row2, col2: Index] {
@@ -144,8 +145,6 @@ pred place_card[b: Board, p: Player, c: Card, row, col: Index] {
 	-- nothing is already in the spot
 	no b.cards[row][col]
 	no b.control[row][col]
-	-- it is this player's turn
-	p = b.player1 => p1_turn[Game] else p2_turn[Game]
 
 	// action
 	next_state b.cards[row][col] = c
@@ -205,7 +204,10 @@ one sig Game {
 
 pred progressing {
 	some row, col: Index, c: Card, p: Player | {
-    	p = Game.board.player1 or p = Game.board.player2
+    	-- it is this player's turn
+			p = Game.board.player1 => p1_turn[Game]
+			p = Game.board.player2 => p2_turn[Game]
+			-- the player places a card
     	place_card[Game.board, p, c, row, col]
 	}
 }
@@ -220,9 +222,11 @@ pred flipping {
 
 pred traces {
 	init[Game.board]
-	always {wellformed[Game.board]
-	valid_cards
-	eligible_players}
+	always {
+		wellformed[Game.board]
+		valid_cards
+		eligible_players
+	}
 	//progressing and next_state flipping
 	//flipping
 	//eventually game_end[Game.board]
@@ -238,11 +242,11 @@ pred traces {
 	//}
 }
 
-test expect {
-	//vacuity should be for traces
-    vacuityTest: {init[Game.board]} for exactly 5 Int, 15 Card, 1 Board, 2 Player is sat
-	//vacuityTest: {traces} for exactly 5 Int, 15 Card, 1 Board, 2 Player is sat
-}
+// test expect {
+// 	//vacuity should be for traces
+//     vacuityTest: {init[Game.board]} for exactly 5 Int, 15 Card, 1 Board, 2 Player is sat
+// 	//vacuityTest: {traces} for exactly 5 Int, 15 Card, 1 Board, 2 Player is sat
+// }
 
 run {
    traces
