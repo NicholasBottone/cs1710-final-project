@@ -96,14 +96,24 @@ pred init[board: Board] {
 	}
 }
 
-pred p1_turn[board: Board] {
-	-- player 1 goes when both players have the same number of cards in their hand
-	#board.player1.collection = #board.player2.collection
+pred p1_turn[game: Game] {
+	-- if player 1 goes first, player 1 goes when both players have placed the same number of cards
+	game.firstTurn = game.player1 =>
+		(#{c: Card | in_play[c, game.board] and c in game.player1.collection} = 
+		#{c: Card | in_play[c, game.board] and c in game.player2.collection}) else 
+	-- otherwise, player 1 goes when player 2 has placed one more card than player 1
+		(#{c: Card | in_play[c, game.board] and c in game.player1.collection} = 
+		add[#{c: Card | in_play[c, game.board] and c in game.player2.collection}, 1])
 }
 
-pred p2_turn[board: Board] {
-	-- player 2 goes when player 1 has one more card in their hand
-	#board.player1.collection = add[#board.player2.collection, 1]
+pred p2_turn[game: Game] {
+	-- if player 2 goes first, player 2 goes when both players have placed the same number of cards
+	game.firstTurn = game.player2 =>
+		(#{c: Card | in_play[c, game.board] and c in game.player1.collection} = 
+		#{c: Card | in_play[c, game.board] and c in game.player2.collection}) else 
+	-- otherwise, player 2 goes when player 1 has placed one more card than player 2
+		(#{c: Card | in_play[c, game.board] and c in game.player2.collection} = 
+		add[#{c: Card | in_play[c, game.board] and c in game.player1.collection}, 1])
 }
 
 pred top_adjacent[row1, col1, row2, col2: Index] {
@@ -129,12 +139,13 @@ pred right_adjacent[row1, col1, row2, col2: Index] {
 pred place_card[b: Board, p: Player, c: Card, row, col: Index] {
 	// guard
 	-- a player can place a card if it is in their collection and not already on the board
-	//p1_turn[b] => p = b.player1
-	//p2_turn[b] => p = b.player2
-	c in p.collection and not in_play[c, b]
+	c in p.collection
+	not in_play[c, b]
 	-- nothing is already in the spot
 	no b.cards[row][col]
 	no b.control[row][col]
+	-- it is this player's turn
+	p = b.player1 => p1_turn[b.game] else p2_turn[b.game]
 
 	// action
 	next_state b.cards[row][col] = c
@@ -188,7 +199,8 @@ pred winning_2[b: Board] {
 }
 
 one sig Game {
-	board: one Board
+	board: one Board,
+	firstTurn: one Player
 }
 
 pred progressing {
