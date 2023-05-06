@@ -49,11 +49,11 @@ pred wellformed[b: Board] {
     	some b.cards[row][col] <=> some b.control[row][col]
 	}
 	-- a card cannot be in multiple spaces simultaneously
-  some c: Card | in_play[c, b] => {one x, y: Index | b.cards[y][x] = c}
+	some c: Card | in_play[c, b] => {one x, y: Index | b.cards[y][x] = c}
 }
 
 pred valid_cards {
-	-- each card has values between 1 and 10
+	-- each card has values between 1 and 11
 	all c: Card | {
     	c.top > 0 and c.top < 11
     	c.bottom > 0 and c.bottom < 11
@@ -163,6 +163,7 @@ pred place_card[b: Board, p: Player, c: Card, row, col: Index] {
 
 			some c2 implies {
 				-- if there was a flip, control changes. otherwise, it stays the same
+				-- re-consider whether it makes sense for this logic to be in its own predicate
 				((left_adjacent[row, col, row2, col2] and (c.right > c2.left)) or 
 					(right_adjacent[row, col, row2, col2] and (c.left > c2.right)) or
 					(top_adjacent[row, col, row2, col2] and (c.bottom > c2.top)) or
@@ -171,39 +172,6 @@ pred place_card[b: Board, p: Player, c: Card, row, col: Index] {
 			}
 		}
 	}	 
-}
-
-
-/*pred flip[b:Board, attacker: Player, c:Card] {
-	one row, col: Index | {
-    	prev_state place_card[b, attacker, c, row, col]
-        (b.control[row][col])' = b.control[row][col]
-
-    	all row2, col2: Index | { let other_card = b.cards[row2][col2] | {
-                (row2 != row and col2 != col and b.control[row2][col2] != attacker) implies {
-        	        ((left_adjacent[row, col, row2, col2] and (c.right > other_card.left)) or 
-                    (right_adjacent[row, col, row2, col2] and (c.left > other_card.right)) or 
-                    (top_adjacent[row, col, row2, col2] and (c.bottom > other_card.top)) or 
-                    (bottom_adjacent[row, col, row2, col2] and (c.top > other_card.bottom))) implies (b.control[row2][col2])' = attacker 
-                else (b.control[row2][col2])' = b.control[row2][col2]
-        	}
-
-        	(b.cards[row2][col2])' = b.cards[row2][col2]    
-    	}
-	}
-}
-}*/
-
-pred flips[b:Board, attacker:Player, row1, col1, row2, col2: Index, attack_c: Card] {
-	let defend_c = b.cards[row2][col2] | {
-		some defend_c
-		b.control[row2][col2] != attacker
-		((left_adjacent[row1, col1, row2, col2] and (attack_c.right > defend_c.left)) or 
-			(right_adjacent[row1, col1, row2, col2] and (attack_c.left > defend_c.right)) or 
-			(top_adjacent[row1, col1, row2, col2] and (attack_c.bottom > defend_c.top)) or 
-    	(bottom_adjacent[row1, col1, row2, col2] and (attack_c.top > defend_c.bottom))) implies
-			(next_state b.control[row2][col2]) = attacker 
-	}
 }
 
 pred game_end[b: Board] {
@@ -233,9 +201,9 @@ one sig Game {
 pred progressing {
 	some row, col: Index, c: Card, p: Player | {
     	-- it is this player's turn
-			p = Game.board.player1 => p1_turn[Game]
-			p = Game.board.player2 => p2_turn[Game]
-			-- the player places a card
+		p = Game.board.player1 => p1_turn[Game]
+		p = Game.board.player2 => p2_turn[Game]
+		-- the player places a card
     	place_card[Game.board, p, c, row, col]
 	}
 }
@@ -260,14 +228,6 @@ pred traces {
 	//eventually game_end[Game.board]
 	//always eventually game_end[Game.board]
 	progressing until game_end[Game.board]
-	//{always progressing} until game_end[Game.board]
-	//progressing and next_state {progressing} and next_state{next_state{progressing}}
-	//	some attacker: Player, c: Card, row: Int, col: Int | { place_card[Game.board, attacker, c, row, col]}
-    	//either this or the board is busy flipping  
-	//} until {game_end[Game.board]}
-	//once {init[Game.board]} => eventually{game_end[Game.board]}
-	//once {init[Game.board]} => always{some attacker: Player, c: Card, row: Int, col: Int | { place_card[Game.board, attacker, c, row, col]} until {game_end[Game.board]}
-	//}
 }
 
 // test expect {
