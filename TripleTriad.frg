@@ -35,7 +35,7 @@ sig Board {
 }
 
 fun asInt[idx: Index]: one Int {
-	idx = A => 0 else idx = B => 1 else idx = C => 2 else -10
+	idx = A => 0 else idx = B => 1 else idx = C => 2 else -8
 }
 
 // abstract sig Element {}
@@ -53,12 +53,12 @@ pred wellformed[b: Board] {
 }
 
 pred valid_cards {
-	-- each card has values between 1 and 11
+	-- each card has values between 1 and 10 (shifted to fit in 4 bits as -2 to 7)
 	all c: Card | {
-    	c.top > 0 and c.top < 11
-    	c.bottom > 0 and c.bottom < 11
-    	c.left > 0 and c.left < 11
-    	c.right > 0 and c.right < 11
+    	c.top >= -2 and c.top <= 7
+			c.bottom >= -2 and c.bottom <= 7
+			c.left >= -2 and c.left <= 7
+			c.right >= -2 and c.right <= 7
 
     	some p: Player | c in p.collection
 	}
@@ -238,6 +238,4 @@ pred traces {
 
 run {
    traces
-} for exactly 5 Int, 15 Card, 1 Board, 2 Player
-
-
+} for exactly 4 Int, 10 Card, 1 Board, 2 Player

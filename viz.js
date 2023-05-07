@@ -50,12 +50,17 @@ function printCard(cardAtom, controllingPlayer, highlightColor) {
   const left = document.createElement("td");
   const right = document.createElement("td");
 
-  top.innerHTML = `<pre>${cardAtom.top.toString().padStart(4, "\u00A0")}</pre>`;
-  bottom.innerHTML = `<pre>${cardAtom.bottom
+  const topNum = parseInt(cardAtom.top.toString()) + 3;
+  const bottomNum = parseInt(cardAtom.bottom.toString()) + 3;
+  const leftNum = parseInt(cardAtom.left.toString()) + 3;
+  const rightNum = parseInt(cardAtom.right.toString()) + 3;
+
+  top.innerHTML = `<pre>${topNum.toString().padStart(4, "\u00A0")}</pre>`;
+  bottom.innerHTML = `<pre>${bottomNum
     .toString()
     .padStart(4, "\u00A0")}</pre>`;
-  left.innerHTML = `<pre>${cardAtom.left.toString().padEnd(3, "\u00A0")}</pre>`;
-  right.innerHTML = `<pre>${cardAtom.right
+  left.innerHTML = `<pre>${leftNum.toString().padEnd(3, "\u00A0")}</pre>`;
+  right.innerHTML = `<pre>${rightNum
     .toString()
     .padStart(3, "\u00A0")}</pre>`;
 
