@@ -163,15 +163,19 @@ pred place_card[b: Board, p: Player, c: Card, row, col: Index] {
 
 			some c2 implies {
 				-- if there was a flip, control changes. otherwise, it stays the same
-				-- re-consider whether it makes sense for this logic to be in its own predicate
-				((left_adjacent[row, col, row2, col2] and (c.right > c2.left)) or 
-					(right_adjacent[row, col, row2, col2] and (c.left > c2.right)) or
-					(top_adjacent[row, col, row2, col2] and (c.bottom > c2.top)) or
-					(bottom_adjacent[row, col, row2, col2] and (c.top > c2.bottom))) implies
-					next_control_c2 = p else next_control_c2 = control_c2
+				card_flip[b, row, col, row2, col2] implies next_control_c2 = p else next_control_c2 = control_c2
 			}
 		}
 	}	 
+}
+
+pred card_flip[b: Board, attackerRow, attackerCol, defenderRow, defenderCol: Index] {
+  let attacker = b.cards[attackerRow][attackerCol], defender = b.cards[defenderRow][defenderCol] | {
+    (left_adjacent[attackerRow, attackerCol, defenderRow, defenderCol] and (attacker.right > defender.left)) or
+    (right_adjacent[attackerRow, attackerCol, defenderRow, defenderCol] and (attacker.left > defender.right)) or
+    (top_adjacent[attackerRow, attackerCol, defenderRow, defenderCol] and (attacker.bottom > defender.top)) or
+    (bottom_adjacent[attackerRow, attackerCol, defenderRow, defenderCol] and (attacker.top > defender.bottom))
+  }
 }
 
 pred game_end[b: Board] {
