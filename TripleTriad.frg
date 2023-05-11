@@ -46,7 +46,7 @@ fun asInt[idx: Index]: one Int {
 
 pred wellformed[b: Board] {
 	all row, col: Index | {
-    	some b.cards[row][col] <=> some b.control[row][col]
+    some b.cards[row][col] <=> some b.control[row][col]
 	}
 	-- a card cannot be in multiple spaces simultaneously
 	some c: Card | in_play[c, b] => {one x, y: Index | b.cards[y][x] = c}
@@ -55,34 +55,34 @@ pred wellformed[b: Board] {
 pred valid_cards {
 	-- each card has values between 1 and 10 (shifted to fit in 4 bits as -2 to 7)
 	all c: Card | {
-    	c.top >= -2 and c.top <= 7
-			c.bottom >= -2 and c.bottom <= 7
-			c.left >= -2 and c.left <= 7
-			c.right >= -2 and c.right <= 7
+		c.top >= -2 and c.top <= 7
+		c.bottom >= -2 and c.bottom <= 7
+		c.left >= -2 and c.left <= 7
+		c.right >= -2 and c.right <= 7
 
-    	some p: Player | c in p.collection
+		some p: Player | c in p.collection
 	}
 }
 
 pred in_play[c: Card, b: Board] {
 	-- a card is in play if it is on the board
 	some row, col: Index | {
-    	b.cards[row][col] = c
+    b.cards[row][col] = c
 	}
 }
 
 pred eligible_players {
 	all p: Player | {
-    	-- can't play a game if you don't have enough cards!
-    	#p.collection > 4
+		-- can't play a game if you don't have enough cards!
+		#p.collection > 4
 	}
 }
 
 pred init[board: Board] {
 	-- the board starts empty
-    all row, col: Index | {
-    	no board.cards[row][col]
-    	no board.control[row][col]
+	all row, col: Index | {
+		no board.cards[row][col]
+		no board.control[row][col]
 	}
 	-- each player starts with 5 cards
 	#board.player1.collection = 5
@@ -90,9 +90,9 @@ pred init[board: Board] {
 	#Card = 10
 
 	all c: Card | {
-        -- each player starts with different cards
-    	c in board.player1.collection => c not in board.player2.collection
-    	c in board.player2.collection => c not in board.player1.collection
+		-- each player starts with different cards
+		c in board.player1.collection => c not in board.player2.collection
+		c in board.player2.collection => c not in board.player1.collection
 	}
 
 	board.player1 != board.player2
@@ -109,13 +109,6 @@ pred p1_turn[game: Game] {
 }
 
 pred p2_turn[game: Game] {
-	// -- if player 2 goes first, player 2 goes when both players have placed the same number of cards
-	// game.firstTurn = game.board.player2 =>
-	// 	(#{c: Card | (in_play[c, game.board] and c in game.board.player1.collection)} = 
-	// 	#{c: Card | (in_play[c, game.board] and c in game.board.player2.collection)}) else 
-	// -- otherwise, player 2 goes when player 1 has placed one more card than player 2
-	// 	(#{c: Card | (in_play[c, game.board] and c in game.board.player2.collection)} = 
-	// 	add[#{c: Card | (in_play[c, game.board] and c in game.board.player1.collection)}, 1])
 	not p1_turn[game]
 }
 
@@ -144,8 +137,6 @@ pred right_adjacent[row1, col1, row2, col2: Index] {
 pred place_card[b: Board, p: Player, c: Card, row, col: Index] {
 	// guard
 	-- a player can place a card if it is in their collection and not already on the board
-	//p1_turn[b] => p = b.player1
-	//p2_turn[b] => p = b.player2
 	c in p.collection and not in_play[c, b]
 	-- nothing is already in the spot
 	no b.cards[row][col]
@@ -204,19 +195,11 @@ one sig Game {
 
 pred progressing {
 	some row, col: Index, c: Card, p: Player | {
-    	-- it is this player's turn
+    -- it is this player's turn
 		p = Game.board.player1 => p1_turn[Game]
 		p = Game.board.player2 => p2_turn[Game]
 		-- the player places a card
-    	place_card[Game.board, p, c, row, col]
-	}
-}
-
-// TO BE DUMMIED OUT
-pred flipping {
-	some c: Card, p: Player | {
-    	p = Game.board.player1 or p = Game.board.player2
-    	//flip[Game.board, p, c]
+    place_card[Game.board, p, c, row, col]
 	}
 }
 
@@ -227,10 +210,6 @@ pred traces {
 		valid_cards
 		eligible_players
 	}
-	//progressing and next_state flipping
-	//flipping
-	//eventually game_end[Game.board]
-	//always eventually game_end[Game.board]
 	progressing until game_end[Game.board]
 }
 
@@ -242,4 +221,4 @@ pred traces {
 
 run {
    traces
-} for exactly 4 Int, 10 Card, 1 Board, 2 Player
+} for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index
