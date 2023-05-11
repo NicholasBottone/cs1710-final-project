@@ -213,12 +213,6 @@ pred traces {
 	progressing until game_end[Game.board]
 }
 
-// test expect {
-// 	//vacuity should be for traces
-//     vacuityTest: {init[Game.board]} for exactly 5 Int, 15 Card, 1 Board, 2 Player is sat
-// 	//vacuityTest: {traces} for exactly 5 Int, 15 Card, 1 Board, 2 Player is sat
-// }
-
 run {
    traces
 } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index
