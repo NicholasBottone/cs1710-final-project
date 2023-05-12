@@ -1,6 +1,8 @@
 # Triple Triad
 ## cs1710 Final Project
 
+Note: The project takes a very long time to run. We have included some video recordings of the traces to save time (see [Trace1](./Trace1.mov), [Trace2](./Trace2.mov), and [Trace3](./Trace3.mov)).
+
 ### OVERVIEW
 
 For our project, we elected to model the card game Triple Triad in Forge. The game is based on a game-within-the-game in the Final Fantasy video game. The game board is 3x3— similar to tic-tac-toe. Two players take turns placing cards on the board until it is filled. There will always be 9 turns in Triple Triad. Players start with a deck containing 5 cards. The cards have four numbers between 1-10 inclusive corresponding to the cardinal directions. When a player places a card down a calculation is performed between adjacent card numbers. The card with the higher values wins, and the opposing card is ‘flipped’ to become under the control of the winning player. For example, there is a card in position 0,0 on the game board. It has a 3 on its east/right position. The next player places a card at position 0,1, right next to it. That card has a 5 on its west/left position. Therefore, the card in position 0,0 is ‘flipped’. (See appendix A). The person controlling more cards at the end of the game is the winner.
