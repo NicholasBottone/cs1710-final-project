@@ -28,17 +28,10 @@ sig Board {
 	var cards: pfunc Index -> Index -> Card,
 	var control: pfunc Index -> Index -> Player,
 	player1: one Player,
-	player2: one Player
-	// var scores: pfunc Player -> Int
-	//LATER elements: pfunc Index -> Index -> Element
+	player2: one Player,
+	var scores: pfunc Player -> Int
     
 }
-
-fun asInt[idx: Index]: one Int {
-	idx = A => 0 else idx = B => 1 else idx = C => 2 else -8
-}
-
-// abstract sig Element {}
 
 /*-------------------*\
 |   Game Operations   |
@@ -76,6 +69,16 @@ pred eligible_players {
 		-- can't play a game if you don't have enough cards!
 		#p.collection > 4
 	}
+}
+
+fun asInt[idx: Index]: one Int {
+	idx = A => 0 else idx = B => 1 else idx = C => 2 else -8
+}
+
+fun calc_score[b: Board, p: Player]: one Int {
+	-- the actual score is subtracted by 2 to keep the value within the 4 Int bitwidth (-8,7). 
+	-- The max possible score of a game typicallys is 9 for controlling all spaces
+	subtract[#{row, col: Index | b.control[row][col] = p}, 3]
 }
 
 pred init[board: Board] {
@@ -203,12 +206,31 @@ pred progressing {
 	}
 }
 
+pred keep_score {
+	Game.firstTurn = Game.board.player1 implies {
+		Game.board.scores[Game.board.player1] = calc_score[Game.board, Game.board.player1]
+		Game.board.scores[Game.board.player2] = add[calc_score[Game.board, Game.board.player2], 1]
+	}
+	else {
+		Game.board.scores[Game.board.player1] = add[calc_score[Game.board, Game.board.player1], 1]
+		Game.board.scores[Game.board.player2] = calc_score[Game.board, Game.board.player2]
+	}
+}
+
+fun winner[b: Board]: lone Player {
+	b.scores[b.player1] > b.scores[b.player2] => b.player1 else
+	b.scores[b.player2] > b.scores[b.player1] => b.player2 else
+	none  
+}
+
 pred traces {
 	init[Game.board]
+	game_end[Game.board]
 	always {
 		wellformed[Game.board]
 		valid_cards
 		eligible_players
+		keep_score
 	}
 	progressing until game_end[Game.board]
 }
