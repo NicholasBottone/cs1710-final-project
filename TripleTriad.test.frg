@@ -215,34 +215,34 @@ pred always_captures_or_flips {
 }
 
 test expect {
-  // -- player 1 can win
-  // player1Wins: { traces and player1_wins } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
-  // -- player 2 can win
-  // player2Wins: { traces and player2_wins } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
-  // -- both player 1 and 2 cannot win at the same time
-  // noDoubleWin: { traces implies not (player1_wins and player2_wins) } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is theorem
-  // -- ties are not possible (other than the initial state)
-  // noZeroWin: { traces implies (player1_wins or player2_wins) } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is theorem
-  // -- player 1 cannot capture all cards on the last turn
-  // player1CapturesAllCardsLastTurn: { traces and player1_captures_all_cards_last_turn } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is unsat
-  // -- player 1 cannot capture all cards on the last two turns
-  // player1CapturesAllCardsLastTwoTurns: { traces and player1_captures_all_cards_last_two_turns } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is unsat
-  // -- player 1 can capture all cards on the last three turns
-  // player1CapturesAllCardsLastThreeTurns: { traces and player1_captures_all_cards_last_three_turns } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
-  // -- player 1 cannot capture all cards on the last four turns
-  // player1CapturesAllCardsLastFourTurns: { traces and player1_captures_all_cards_last_four_turns } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is unsat
-  // -- the game can be completed without any captures/flips
-  // noCapturesOrFlips: { traces and no_captures_or_flips } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
-  // -- player 1 can capture all cards
-  // player1CapturesAllCards: { traces and player1_captures_all_cards } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
-  // -- player 2 cannot capture all cards
-  // player2CapturesAllCards: { traces and player2_captures_all_cards } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is unsat
-  // -- player 1 can win with a hand containing no values greater than 3
-  // player1WinsWithLowHand: { traces and player1_wins_with_low_hand } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
-  // -- player 1 cannot end the game with any card from their collection not in play
-  // player1EndsGameWithUnusedCard: { traces implies not player1_ends_game_with_unused_card } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is theorem
-  // -- player 2 must end the game with any card from their collection not in play
-  // player2EndsGameWithUnusedCard: { traces implies player2_ends_game_with_unused_card } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is theorem
-  // -- there can be a game such that there is >= 1 flip/capture on every turn
-  // alwaysCapturesOrFlips: { traces and always_captures_or_flips } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
+  -- player 1 can win
+  player1Wins: { traces and player1_wins } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
+  -- player 2 can win
+  player2Wins: { traces and player2_wins } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
+  -- both player 1 and 2 cannot win at the same time
+  noDoubleWin: { traces implies not (player1_wins and player2_wins) } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is theorem
+  -- ties are not possible (other than the initial state)
+  noZeroWin: { traces implies (player1_wins or player2_wins) } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is theorem
+  -- player 1 cannot capture all cards on the last turn
+  player1CapturesAllCardsLastTurn: { traces and player1_captures_all_cards_last_turn } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is unsat
+  -- player 1 cannot capture all cards on the last two turns
+  player1CapturesAllCardsLastTwoTurns: { traces and player1_captures_all_cards_last_two_turns } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is unsat
+  -- player 1 can capture all cards on the last three turns
+  player1CapturesAllCardsLastThreeTurns: { traces and player1_captures_all_cards_last_three_turns } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
+  -- player 1 cannot capture all cards on the last four turns
+  player1CapturesAllCardsLastFourTurns: { traces and player1_captures_all_cards_last_four_turns } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is unsat
+  -- the game can be completed without any captures/flips
+  noCapturesOrFlips: { traces and no_captures_or_flips } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
+  -- player 1 can capture all cards
+  player1CapturesAllCards: { traces and player1_captures_all_cards } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
+  -- player 2 cannot capture all cards
+  player2CapturesAllCards: { traces and player2_captures_all_cards } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is unsat
+  -- player 1 can win with a hand containing no values greater than 3
+  player1WinsWithLowHand: { traces and player1_wins_with_low_hand } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
+  -- player 1 cannot end the game with any card from their collection not in play
+  player1EndsGameWithUnusedCard: { traces implies not player1_ends_game_with_unused_card } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is theorem
+  -- player 2 must end the game with any card from their collection not in play
+  player2EndsGameWithUnusedCard: { traces implies player2_ends_game_with_unused_card } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is theorem
+  -- there can be a game such that there is >= 1 flip/capture on every turn
+  alwaysCapturesOrFlips: { traces and always_captures_or_flips } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
 }
