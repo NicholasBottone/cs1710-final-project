@@ -8,64 +8,58 @@ open "TripleTriad.frg"
 
 -- player 2 flips player 1's card
 pred flipExample {
-  some attacker, defender: Card | {
-    attacker.top = 1
-    attacker.bottom = 2
-    attacker.left = 3
-    attacker.right = 4
+  eventually {
+    some attacker, defender: Card | {
+      // note that defender.left < attacker.right
+      attacker.right = 10
+      defender.left = 1
 
-    defender.top = 5
-    defender.bottom = 6
-    defender.left = 1 // note defender.left < attacker.right
-    defender.right = 8
+      // player 1 is defending and player 2 is attacking
+      attacker in Game.board.player2.collection
+      defender in Game.board.player1.collection
 
-    attacker in Game.board.player2.collection
-    defender in Game.board.player1.collection
+      // player 1 plays a card at the center spot
+      Game.board.cards[B][B] = defender
+      Game.board.control[B][B] = Game.board.player1
 
-    // player 1 plays a card at the center spot
-    Game.board.cards[B][B] = defender
-    Game.board.control[B][B] = Game.board.player1
-
-    // player 2 plays a card to the left, flipping player 1's card
-    next_state Game.board.cards[B][B] = defender
-    next_state Game.board.cards[B][A] = attacker
-    next_state Game.board.control[B][B] = Game.board.player2
-    next_state Game.board.control[B][A] = Game.board.player2
+      // player 2 plays a card to the left, flipping player 1's card
+      next_state Game.board.cards[B][B] = defender
+      next_state Game.board.cards[B][A] = attacker
+      next_state Game.board.control[B][B] = Game.board.player2
+      next_state Game.board.control[B][A] = Game.board.player2
+    }
   }
 }
 
 -- player 2 fails to flip player 1's card
 pred noFlipExample {
-  some attacker, defender: Card | {
-    attacker.top = 1
-    attacker.bottom = 2
-    attacker.left = 3
-    attacker.right = 4
+  eventually {
+    some attacker, defender: Card | {
+      // note that defender.left > attacker.right
+      attacker.right = 4
+      defender.left = 7 
 
-    defender.top = 5
-    defender.bottom = 6
-    defender.left = 7 // note defender.left > attacker.right
-    defender.right = 8
+      // player 1 is defending and player 2 is attacking
+      attacker in Game.board.player2.collection
+      defender in Game.board.player1.collection
 
-    attacker in Game.board.player2.collection
-    defender in Game.board.player1.collection
+      // player 1 plays a card at the center spot
+      Game.board.cards[B][B] = defender
+      Game.board.control[B][B] = Game.board.player1
 
-    // player 1 plays a card at the center spot
-    Game.board.cards[B][B] = defender
-    Game.board.control[B][B] = Game.board.player1
-
-    // player 2 plays a card to the left, failing to flip player 1's card
-    next_state Game.board.cards[B][B] = defender
-    next_state Game.board.cards[B][A] = attacker
-    next_state Game.board.control[B][B] = Game.board.player1
-    next_state Game.board.control[B][A] = Game.board.player2
+      // player 2 plays a card to the left, failing to flip player 1's card
+      next_state Game.board.cards[B][B] = defender
+      next_state Game.board.cards[B][A] = attacker
+      next_state Game.board.control[B][B] = Game.board.player1
+      next_state Game.board.control[B][A] = Game.board.player2
+    }
   }
 }
 
 test expect {
-  tracesVacuity: { traces } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
-  flipExample: { flipExample } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
-  noFlipExample: { noFlipExample } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
+  // tracesVacuity: { traces } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
+  flipExampleTest: { traces and flipExample } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
+  noFlipExampleTest: { traces and noFlipExample } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
 }
 
 /*-------------------*\
@@ -109,7 +103,7 @@ pred player1_captures_all_cards_last_two_turns {
       #{row, col: Index | b.control[row][col] = b.player1} = 0
 
       // next next turn the number of cards controlled by player 1 is 9
-      #{row, col: Index | next_state next_state b.control[row][col] = b.player1} = 9
+      #{row, col: Index | next_state next_state next_state b.control[row][col] = b.player1} = 9
     }
   }
 }
@@ -123,7 +117,21 @@ pred player1_captures_all_cards_last_three_turns {
       #{row, col: Index | b.control[row][col] = b.player1} = 0
 
       // next next next turn the number of cards controlled by player 1 is 9
-      #{row, col: Index | next_state next_state next_state b.control[row][col] = b.player1} = 9
+      #{row, col: Index | next_state next_state next_state next_state next_state b.control[row][col] = b.player1} = 9
+    }
+  }
+}
+
+-- can player 1 capture every card on the last four turns?
+pred player1_captures_all_cards_last_four_turns {
+  eventually {
+    some b: Board | {
+      // the number of cards controlled by player 2 is 2
+      #{row, col: Index | b.control[row][col] = b.player2} = 2
+      #{row, col: Index | b.control[row][col] = b.player1} = 0
+
+      // next next next next turn the number of cards controlled by player 1 is 9
+      #{row, col: Index | next_state next_state next_state next_state next_state next_state next_state b.control[row][col] = b.player1} = 9
     }
   }
 }
@@ -195,6 +203,17 @@ pred player2_ends_game_with_unused_card {
   }
 }
 
+// -- can there be a game such that there is >= 1 flip/capture on every turn?
+// pred always_captures_or_flips {
+//   always {
+//     #{row, col: Index | (Game.board.control[row][col] != (next_state (Game.board.control[row][col])))} >= 2
+//     // >= 2 since there will always be one card placed + one card flipped/captured
+//   }
+//   historically {
+//     #{row, col: Index | (Game.board.control[row][col] != (next_state (Game.board.control[row][col])))} >= 2
+//   }
+// }
+
 test expect {
   -- player 1 can win
   player1Wins: { traces and player1_wins } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
@@ -208,8 +227,10 @@ test expect {
   player1CapturesAllCardsLastTurn: { traces and player1_captures_all_cards_last_turn } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is unsat
   -- player 1 cannot capture all cards on the last two turns
   player1CapturesAllCardsLastTwoTurns: { traces and player1_captures_all_cards_last_two_turns } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is unsat
-  -- player 1 can capture all cards on the last three turns
-  player1CapturesAllCardsLastThreeTurns: { traces and player1_captures_all_cards_last_three_turns } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
+ -- player 1 can capture all cards on the last three turns
+ player1CapturesAllCardsLastThreeTurns: { traces and player1_captures_all_cards_last_three_turns } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
+  -- player 1 cannot capture all cards on the last four turns
+  player1CapturesAllCardsLastFourTurns: { traces and player1_captures_all_cards_last_four_turns } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is unsat
   -- the game can be completed without any captures/flips
   noCapturesOrFlips: { traces and no_captures_or_flips } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
   -- player 1 can capture all cards
@@ -222,4 +243,6 @@ test expect {
   player1EndsGameWithUnusedCard: { traces implies not player1_ends_game_with_unused_card } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is theorem
   -- player 2 must end the game with any card from their collection not in play
   player2EndsGameWithUnusedCard: { traces implies player2_ends_game_with_unused_card } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is theorem
+  -- there can be a game such that there is >= 1 flip/capture on every turn
+  alwaysCapturesOrFlips: { traces and always_captures_or_flips } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
 }
