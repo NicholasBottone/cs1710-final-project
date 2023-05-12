@@ -214,5 +214,5 @@ pred traces {
 }
 
 run {
-   traces
+  traces
 } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index
