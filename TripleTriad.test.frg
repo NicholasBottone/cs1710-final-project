@@ -6,8 +6,66 @@ open "TripleTriad.frg"
 |     Model Tests     |
 \*-------------------*/
 
+-- player 2 flips player 1's card
+pred flipExample {
+  some attacker, defender: Card | {
+    attacker.top = 1
+    attacker.bottom = 2
+    attacker.left = 3
+    attacker.right = 4
+
+    defender.top = 5
+    defender.bottom = 6
+    defender.left = 1 // note defender.left < attacker.right
+    defender.right = 8
+
+    attacker in Game.board.player2.collection
+    defender in Game.board.player1.collection
+
+    // player 1 plays a card at the center spot
+    Game.board.cards[B][B] = defender
+    Game.board.control[B][B] = Game.board.player1
+
+    // player 2 plays a card to the left, flipping player 1's card
+    next_state Game.board.cards[B][B] = defender
+    next_state Game.board.cards[B][A] = attacker
+    next_state Game.board.control[B][B] = Game.board.player2
+    next_state Game.board.control[B][A] = Game.board.player2
+  }
+}
+
+-- player 2 fails to flip player 1's card
+pred noFlipExample {
+  some attacker, defender: Card | {
+    attacker.top = 1
+    attacker.bottom = 2
+    attacker.left = 3
+    attacker.right = 4
+
+    defender.top = 5
+    defender.bottom = 6
+    defender.left = 7 // note defender.left > attacker.right
+    defender.right = 8
+
+    attacker in Game.board.player2.collection
+    defender in Game.board.player1.collection
+
+    // player 1 plays a card at the center spot
+    Game.board.cards[B][B] = defender
+    Game.board.control[B][B] = Game.board.player1
+
+    // player 2 plays a card to the left, failing to flip player 1's card
+    next_state Game.board.cards[B][B] = defender
+    next_state Game.board.cards[B][A] = attacker
+    next_state Game.board.control[B][B] = Game.board.player1
+    next_state Game.board.control[B][A] = Game.board.player2
+  }
+}
+
 test expect {
   tracesVacuity: { traces } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
+  flipExample: { flipExample } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
+  noFlipExample: { noFlipExample } for exactly 4 Int, 10 Card, 1 Board, 2 Player, 3 Index is sat
 }
 
 /*-------------------*\
