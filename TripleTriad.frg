@@ -2,6 +2,7 @@
 
 option problem_type temporal
 option max_tracelength 10
+option min_tracelength 10
 
 /*---------------*\
 |   Definitions   |
@@ -225,7 +226,6 @@ fun winner[b: Board]: lone Player {
 
 pred traces {
 	init[Game.board]
-	game_end[Game.board]
 	always {
 		wellformed[Game.board]
 		valid_cards
