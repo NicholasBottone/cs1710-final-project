@@ -14,6 +14,15 @@
 //   collection: Card[];
 // }
 
+/**
+ * @param {number} x 
+ * @returns {string}
+ */
+function fmt(x) {
+  if (isNaN(x)) return "";
+  return x.toString();
+}
+
 div.replaceChildren();
 
 const container = document.createElement("div");
@@ -55,14 +64,10 @@ function printCard(cardAtom, controllingPlayer, highlightColor) {
   const leftNum = parseInt(cardAtom.left.toString()) + 3;
   const rightNum = parseInt(cardAtom.right.toString()) + 3;
 
-  top.innerHTML = `<pre>${topNum.toString().padStart(4, "\u00A0")}</pre>`;
-  bottom.innerHTML = `<pre>${bottomNum
-    .toString()
-    .padStart(4, "\u00A0")}</pre>`;
-  left.innerHTML = `<pre>${leftNum.toString().padEnd(3, "\u00A0")}</pre>`;
-  right.innerHTML = `<pre>${rightNum
-    .toString()
-    .padStart(3, "\u00A0")}</pre>`;
+  top.innerHTML = `<pre>${fmt(topNum).padStart(4, "\u00A0")}</pre>`;
+  bottom.innerHTML = `<pre>${fmt(bottomNum).padStart(4, "\u00A0")}</pre>`;
+  left.innerHTML = `<pre>${fmt(leftNum).padEnd(3, "\u00A0")}</pre>`;
+  right.innerHTML = `<pre>${fmt(rightNum).padStart(3, "\u00A0")}</pre>`;
 
   // cardRow1.appendChild(document.createElement("td"));
   cardRow1.appendChild(top);
